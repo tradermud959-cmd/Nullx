@@ -32,6 +32,9 @@ interface ChatDao {
     @Insert
     suspend fun insertMessage(message: ChatMessage)
 
+    @Delete
+    suspend fun deleteMessage(message: ChatMessage)
+
     @Query("DELETE FROM chat_messages WHERE sessionId = :sessionId")
     suspend fun deleteMessagesForSession(sessionId: String)
 

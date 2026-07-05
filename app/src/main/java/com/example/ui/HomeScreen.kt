@@ -90,6 +90,7 @@ import com.example.ui.theme.HintText
 import com.example.ui.theme.UserBubble
 import com.example.viewmodel.ChatViewModel
 import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -355,6 +356,7 @@ fun HomeScreen(
                                     Image(
                                         painter = painterResource(id = R.drawable.nullx_logo),
                                         contentDescription = "NullX Logo",
+                                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                                         modifier = Modifier
                                             .size(96.dp)
                                             .align(Alignment.Center)
@@ -401,7 +403,10 @@ fun HomeScreen(
                             item { Spacer(modifier = Modifier.height(16.dp)) }
                             items(messages, key = { it.id ?: it.hashCode() }) { message ->
                                 AnimatedFadeIn {
-                                    ChatBubble(message = message)
+                                    ChatBubble(
+                                        message = message,
+                                        onDelete = { viewModel.deleteMessage(message) }
+                                    )
                                 }
                             }
                             if (isGenerating && currentStreamText.isNotEmpty()) {
@@ -667,7 +672,11 @@ fun MenuButton(text: String, icon: String, isPrimary: Boolean, onClick: () -> Un
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-fun ChatBubble(message: ChatMessage, isStreaming: Boolean = false) {
+fun ChatBubble(
+    message: ChatMessage,
+    isStreaming: Boolean = false,
+    onDelete: () -> Unit = {}
+) {
     val isUser = message.isUser
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
@@ -736,6 +745,16 @@ fun ChatBubble(message: ChatMessage, isStreaming: Boolean = false) {
                     },
                     leadingIcon = {
                         Icon(Icons.Rounded.ContentCopy, contentDescription = null)
+                    }
+                )
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text("Delete message") },
+                    onClick = {
+                        onDelete()
+                        showMenu = false
+                    },
+                    leadingIcon = {
+                        Icon(Icons.Rounded.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                     }
                 )
             }

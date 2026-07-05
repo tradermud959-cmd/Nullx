@@ -29,6 +29,10 @@ class ChatRepository(
         chatDao.insertMessage(message)
     }
 
+    suspend fun deleteMessage(message: ChatMessage) {
+        chatDao.deleteMessage(message)
+    }
+
     suspend fun deleteMessagesForSession(sessionId: String) {
         chatDao.deleteMessagesForSession(sessionId)
     }

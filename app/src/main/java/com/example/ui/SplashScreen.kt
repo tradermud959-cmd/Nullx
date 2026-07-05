@@ -63,6 +63,7 @@ fun SplashScreen(onTimeout: () -> Unit) {
         Image(
             painter = painterResource(id = R.drawable.nullx_logo),
             contentDescription = "NullX Logo",
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
             modifier = Modifier
                 .alpha(alphaAnim)
                 .scale(scaleAnim)

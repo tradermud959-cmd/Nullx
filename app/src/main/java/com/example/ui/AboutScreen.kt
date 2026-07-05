@@ -63,6 +63,7 @@ fun AboutScreen(onBack: () -> Unit) {
             Image(
                 painter = painterResource(id = R.drawable.nullx_logo),
                 contentDescription = "NullX Logo",
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                 modifier = Modifier
                     .size(80.dp)
                     .clip(RoundedCornerShape(24.dp))

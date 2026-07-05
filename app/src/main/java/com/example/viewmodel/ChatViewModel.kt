@@ -116,6 +116,12 @@ class ChatViewModel(private val repository: ChatRepository) : ViewModel() {
         }
     }
 
+    fun deleteMessage(message: ChatMessage) {
+        viewModelScope.launch {
+            repository.deleteMessage(message)
+        }
+    }
+
     fun checkConnection() {
         viewModelScope.launch {
             _connectionStatus.value = repository.checkConnection()

@@ -1,0 +1,6 @@
+{
+  "name": "NullX AI",
+  "description": "A local AI chatbot frontend using Ollama",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

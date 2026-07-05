@@ -1,0 +1,11 @@
+@Composable
+fun AiAvatar() {
+    Image(
+        painter = painterResource(id = R.drawable.nullx_ai_mascot_1783220072642),
+        contentDescription = "AI Avatar",
+        modifier = Modifier
+            .size(40.dp)
+            .clip(androidx.compose.foundation.shape.CircleShape)
+            .background(Color.Transparent)
+    )
+}

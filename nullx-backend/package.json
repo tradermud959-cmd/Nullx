@@ -1,0 +1,13 @@
+{
+  "name": "nullx-backend",
+  "version": "1.0.0",
+  "description": "Backend for NullX AI Android App",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}

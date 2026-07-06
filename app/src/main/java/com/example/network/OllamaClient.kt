@@ -15,19 +15,19 @@ import java.util.concurrent.TimeUnit
 
 class OllamaClient(private val ip: String, private val port: String) {
     private val client = OkHttpClient.Builder()
-        .readTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(120, TimeUnit.SECONDS)
         .build()
 
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()
 
-    private val requestAdapter = moshi.adapter(OllamaRequest::class.java)
-    private val responseAdapter = moshi.adapter(OllamaResponse::class.java)
+    private val requestAdapter = moshi.adapter(NullXChatRequest::class.java)
+    private val responseAdapter = moshi.adapter(NullXChatResponse::class.java)
 
     fun generateStream(prompt: String): Flow<String> = flow {
-        val url = "http://$ip:$port/api/generate"
-        val requestBody = OllamaRequest(prompt = prompt)
+        val url = "http://$ip:$port/chat"
+        val requestBody = NullXChatRequest(message = prompt)
         val json = requestAdapter.toJson(requestBody)
 
         val request = Request.Builder()
@@ -35,33 +35,44 @@ class OllamaClient(private val ip: String, private val port: String) {
             .post(json.toRequestBody("application/json".toMediaType()))
             .build()
 
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                emit("Error: ${response.code}")
-                return@use
-            }
+        try {
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    emit("Error: ${response.code}")
+                    return@use
+                }
 
-            val source = response.body?.source() ?: return@use
-            while (!source.exhausted()) {
-                val line = source.readUtf8Line()
-                if (line != null) {
-                    try {
-                        val parsed = responseAdapter.fromJson(line)
-                        if (parsed?.response != null) {
-                            emit(parsed.response)
-                        }
-                    } catch (e: Exception) {
-                        // ignore parse errors for partial lines or invalid json
+                // If the response is streaming, it might be JSON lines.
+                // But if it's just a regular JSON response from FastAPI:
+                val bodyString = response.body?.string() ?: ""
+                try {
+                    val parsed = responseAdapter.fromJson(bodyString)
+                    if (parsed?.reply != null) {
+                        emit(parsed.reply)
+                    } else {
+                        emit(bodyString)
+                    }
+                } catch (e: Exception) {
+                    // Try parsing as lines if it failed (fallback for streaming)
+                    bodyString.lines().forEach { line ->
+                        try {
+                            val parsedLine = responseAdapter.fromJson(line)
+                            if (parsedLine?.reply != null) {
+                                emit(parsedLine.reply)
+                            }
+                        } catch (e2: Exception) {}
                     }
                 }
             }
+        } catch (e: Exception) {
+            emit("Error: ${e.message}")
         }
     }.flowOn(Dispatchers.IO)
 
     suspend fun checkConnection(): Boolean {
         return kotlinx.coroutines.withContext(Dispatchers.IO) {
             try {
-                val url = "http://$ip:$port/"
+                val url = "http://$ip:$port/health"
                 val request = Request.Builder().url(url).build()
                 client.newCall(request).execute().use { response ->
                     response.isSuccessful

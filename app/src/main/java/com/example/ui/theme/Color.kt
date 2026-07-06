@@ -2,7 +2,7 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Background = Color(0xFF0B0B0B)
+val Background = Color(0xFF000000)
 val Surface = Color(0xFF151515)
 val Card = Color(0xFF1D1D1D)
 val Border = Color(0xFF2A2A2A)

@@ -99,6 +99,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import com.example.R
 
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -241,12 +245,14 @@ fun HomeScreen(
         }
     }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
-        Column(
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        ChatGlowEffect(isGenerating = isGenerating, connectionStatus = connectionStatus)
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Transparent,
+            snackbarHost = { SnackbarHost(snackbarHostState) }
+        ) { paddingValues ->
+            Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -433,7 +439,7 @@ fun HomeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background)
+                    .background(Color.Transparent)
                     .border(1.dp, Border) // Top border
                     .padding(16.dp)
             ) {
@@ -561,6 +567,7 @@ fun HomeScreen(
                 }
             }
         }
+    }
     }
 
     if (showBottomSheet) {
@@ -808,6 +815,94 @@ fun SuggestionPill(text: String, onClick: () -> Unit) {
             color = HintText,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
+fun ChatGlowEffect(
+    isGenerating: Boolean,
+    connectionStatus: Boolean?
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "glow_anim")
+    val breathingAnim by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(5000, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "breathing"
+    )
+
+    val targetBaseOpacity = when (connectionStatus) {
+        true -> 0.12f
+        false -> 0.0f
+        null -> 0.05f
+    }
+    
+    val baseOpacity by animateFloatAsState(
+        targetValue = targetBaseOpacity,
+        animationSpec = tween(1000),
+        label = "base_opacity"
+    )
+    
+    val connectionPulse by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = if (connectionStatus == null) 1.5f else 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "connecting_pulse"
+    )
+
+    val generationMultiplier by animateFloatAsState(
+        targetValue = if (isGenerating) 1.4f else 1f,
+        animationSpec = tween(500),
+        label = "generation_multiplier"
+    )
+    
+    val glowColor = Color(0xFFFF2D55) // Red Accent
+    
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val width = size.width
+        val height = size.height
+        
+        val opacity = (baseOpacity * breathingAnim * connectionPulse * generationMultiplier).coerceIn(0f, 1f)
+        val color = glowColor.copy(alpha = opacity)
+        
+        // Bottom left glow
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(color, Color.Transparent),
+                center = Offset(0f, height),
+                radius = width * 0.8f
+            ),
+            center = Offset(0f, height),
+            radius = width * 0.8f
+        )
+        
+        // Bottom right glow
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(color, Color.Transparent),
+                center = Offset(width, height),
+                radius = width * 0.8f
+            ),
+            center = Offset(width, height),
+            radius = width * 0.8f
+        )
+        
+        // Center bottom glow (behind input)
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(color.copy(alpha = opacity * 0.8f), Color.Transparent),
+                center = Offset(width / 2f, height),
+                radius = width * 0.6f
+            ),
+            center = Offset(width / 2f, height),
+            radius = width * 0.6f
         )
     }
 }
